@@ -2,12 +2,27 @@
 
 import json
 import os
+import shutil
 import subprocess
+import tempfile
 import sys
 
 from time import gmtime, strftime
 
 BREW_BIN = '/usr/local/bin/brew'
+INSTALL_LOCATION = '/usr/local'
+
+# Some additional items which are erroneously not listed in `brew ls --unbrewed`
+PKG_FILTERS = [
+'bin/santactl',
+'bin/autopkg',
+'remotedesktop/RemoteDesktopChangeClientSettings.pkg',
+'var', # exclude all of var to see what breaks
+'Library',
+]
+
+def log_err(msg):
+	print sys.stderr >> msg
 
 def cmd_output(cmd, env={}):
 	'''Run a brew command passed as a list, returns (stdout, stderr)
@@ -20,32 +35,44 @@ def cmd_output(cmd, env={}):
 	return (out.strip(), err)
 
 def cmd_call(cmd, env={}):
+	'''Just subprocess.calls the list of args to the `brew` command'''
 	send_cmd = [BREW_BIN] + cmd
 	new_env = os.environ.copy().update(env)
-	proc = subprocess.call(send_cmd, env=new_env)
+	retcode = subprocess.call(send_cmd, env=new_env)
+	return retcode
+
 
 class BrewStewEnv(object):
 	def __init__(self, brew_file):
+		cmd_call(['analytics', 'off'])
+		os.environ['HOMEBREW_NO_AUTO_UPDATE'] = '1'
+
 		self.brew_list = []
-		self.installed_formulae = []
-		self.non_homebrew_files = []
 		for line in open(brew_file, 'r').read().splitlines():
 			if line.startswith("#"):
 				continue
 			self.brew_list.append(line)
-		cmd_call(['analytics', 'off'])
-		# self.prefix = subprocess.Popen([BREW_BIN, '--prefix'], stdout=subprocess.PIPE).communicate()[0].strip()
-		self.prefix, _ = cmd_output(['--prefix'])
-		self._update_installed()
-		self._update_unbrewed()
+
 		self.installed_json = []
+		self.installed_formulae = []
+		self._update_installed()
+
+		self.non_homebrew_files = []
+		self._update_unbrewed()
+
+		self.prefix, _ = cmd_output(['--prefix'])
+		self.filtered_pkg_files = []
+		self.built_pkg_path = None
 
 	def _update_installed(self):
-		proc = subprocess.Popen([BREW_BIN, 'ls', '--versions'], stdout=subprocess.PIPE)
-		out, _ = proc.communicate()
-		for line in out.splitlines():
-			formula, version = line.split()
-			self.installed_formulae.append(line.split())
+		installed = []
+		info_json, _ = cmd_output(['info', '--json=v1', '--installed'])
+		self.installed_json = json.loads(info_json)
+		for f in self.installed_json:
+			installed.append((f['name'], f['installed'][0]['version']))
+			if len(f['installed']) > 1:
+				log_err("WARNING: Formula %s has more than one version installed, unexpected" % f['name'])
+		self.installed_formulae = installed
 
 	def _update_unbrewed(self):
 		proc = subprocess.Popen([BREW_BIN, 'ls', '--unbrewed'], stdout=subprocess.PIPE)
@@ -53,12 +80,14 @@ class BrewStewEnv(object):
 		for line in out.splitlines():
 			self.non_homebrew_files.append(line)
 
+	def brew_update(self):
+		cmd_call(['update'])
+
 	def brew_install(self):
 		for brew in self.brew_list:
 			cmd_call(['install', brew])
-		info_json = cmd_output(['info', '--json=v1', '--installed'])
-		self.installed_json, _ = json.loads(info_json)
-
+		self._update_installed
+		self._update_unbrewed
 
 	def brew_test(self):
 		for brew in self.brew_list:
@@ -67,45 +96,70 @@ class BrewStewEnv(object):
 	def cleanroom(self):
 		if self.installed_formulae:
 			rm_cmd = ['rm', '--force', '--ignore-dependencies']
-			rm_cmd.extend(self.installed_formulae)
+			rm_cmd.extend([f for (f, ver) in self.installed_formulae])
 			cmd_call(rm_cmd)
 		cmd_call(['cleanup'])
 
-	def build_pkg(self, version):
-		cmd = ['/usr/bin/pkgbuild']
-		cmd += ['--root', self.prefix, '--install-location', self.prefix, '--identifier', 'com.foo', '--version', version]
+	def build_pkg(self, version=None, output_path=None, strategy='subtractive'):
+		if version is None:
+			version = strftime('%Y.%m.%d', gmtime())
+		self.built_pkg_path = os.path.join(os.getcwd(), 'stew_subtractive-%s.pkg' % version)
+		# TODO: see if we can still use '--install-location /usr/local' so we can avoid needing to include it
+		# in the actual payload path. This is easy to do when we're packaging a '--root' in-place, but more
+		# work if we
+		pkgbuild_cmd = ['/usr/bin/pkgbuild', '--install-location', INSTALL_LOCATION, '--identifier', 'com.brewstew', '--version', version]
 
-		for path in self.non_homebrew_files:
-			# don't pass --filter the absolute paths on disk - what you get from
-			# `brew ls --unbrewed` (relative to the prefix) will match properly
-			#
+		if strategy == 'subtractive':
+			pkgbuild_cmd += ['--root', self.prefix]
 			# except we get warnings for these files, presumably because of the ++:
 			# WARNING **** Can't compile pattern: share/mime/text/x-c++src.xml
-
-			cmd += ['--filter', path]
-		cmd += [
-			'--filter', '.DS_Store',
-			'--filter', '.git',
-			# check if these absolute paths still match the filter
-			'--filter', 'Homebrew', # brew core git repos
-			'--filter', 'bin/brew', # brew CLI binstub
+			self.filtered_pkg_files += self.non_homebrew_files
+			self.filtered_pkg_files += PKG_FILTERS
+			self.filtered_pkg_files += [
+				'.DS_Store',
+				'.git',
+				'Homebrew',	# brew core git repos
+				'bin/brew', # brew CLI binstub
 			]
+			for pattern in self.filtered_pkg_files:
+				pkgbuild_cmd += ['--filter', pattern]
+			pkgbuild_cmd += [self.built_pkg_path]
 
-		cmd += [os.path.expanduser('~/Desktop/brew') + '-%s.pkg' % version]
 
-		subprocess.call(cmd)
+		if strategy == 'additive':
+			pkgroot = os.path.expanduser('~/Desktop/pkgroot')
+			pkgbuild_cmd += ['--root', os.path.join(pkgroot, 'usr/local')]
 
-	# debug tool for printing out the bom of the built package
-	def dump_pkg_bom(self):
-		pass
+			if os.path.exists(pkgroot):
+				shutil.rmtree(pkgroot)
+			# TODO: derive this from a variable/const
+			# os.makedirs(os.path.join(pkgroot, 'usr/local'))
+			os.mkdir(pkgroot)
+			file_list_path = tempfile.mkstemp()[1]
+			with open(file_list_path, 'w') as fd:
+				fd.write(cmd_output(['ls', '--verbose'] + [name for (name, ver) in self.installed_formulae])[0])
+			rsync_cmd = ['/usr/bin/rsync', '-a']
+			rsync_cmd += ['--files-from', file_list_path, '/', pkgroot]
+			print "Built rsync command: %s" % rsync_cmd
+			subprocess.call(rsync_cmd)
+
+		print "Calling pkgbuild command: %s" % pkgbuild_cmd
+		pkgbuild_cmd.append(self.built_pkg_path)
+		subprocess.call(pkgbuild_cmd)
+
+	def dump_pkg_files(self):
+		subprocess.call(['/usr/sbin/pkgutil', '--payload-files', self.built_pkg_path])
 
 
 def main():
 	env = BrewStewEnv(sys.argv[1])
 	env.cleanroom()
+	env.brew_update()
 	env.brew_install()
 	# env.brew_test()
-	# env.build_pkg(version=strftime('%Y.%m.%d', gmtime()))
+	# print env.non_homebrew_files
+	env.build_pkg(strategy='additive')
+	env.dump_pkg_files()
 
 
 if __name__ == '__main__':
