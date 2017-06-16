@@ -176,6 +176,9 @@ class BrewStewEnv(object):
 			print "Staging symlinks"
 			stage_files(symlinks, pkgroot)
 
+			print "Staging opt"
+			opt_files = [os.path.join('/usr/local/opt', f) for f in os.listdir('/usr/local/opt')]
+			stage_files(opt_files, pkgroot)
 
 		print "Calling pkgbuild command: %s" % pkgbuild_cmd
 		pkgbuild_cmd.append(self.built_pkg_path)
