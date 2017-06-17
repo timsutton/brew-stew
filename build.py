@@ -23,7 +23,7 @@ PKG_FILTERS = [
 ]
 
 def log_err(msg):
-	print sys.stderr >> msg
+	print >> sys.stderr, msg
 
 def cmd_output(cmd, env={}):
 	'''Run a brew command passed as a list, returns (stdout, stderr)
