@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 
+from pprint import pprint
 from time import gmtime, strftime
 
 BREW_BIN = '/usr/local/bin/brew'
