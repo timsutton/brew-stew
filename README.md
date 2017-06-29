@@ -16,3 +16,7 @@ Building the package by packaging up all of `/usr/local`, and attempting to filt
 ### Additive
 
 Using tools like `brew ls --verbose <formula>` to list all the files known to be installed by a formula, stage these to an alternate package root using `rsync` to preserve modes, and package from this root instead. What we don't yet have is the logic to also include symlinks or the `opt` brew directories. This may be easy to do ourselves by following naming conventions, even if brew doesn't provide an obvious way to do it.
+
+## Reporting
+
+For now, the `BrewStewEnv.build_report()` method saves a file, `report.json`, in the current directory. Eventually this can be made more configurable or be bundled in a directory along with a built package.
