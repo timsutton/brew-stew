@@ -25,10 +25,12 @@ PKG_FILTERS = [
 def log_err(msg):
 	print >> sys.stderr, msg
 
-def cmd_output(cmd, env={}):
+def cmd_output(cmd, explicit_cmd=False, env={}):
 	'''Run a brew command passed as a list, returns (stdout, stderr)
 	env can optionally augment the environment passed to the process'''
 	send_cmd = [BREW_BIN] + cmd
+	if explicit_cmd:
+		send_cmd = cmd
 	new_env = os.environ.copy()
 	new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
 	new_env.update(env)
@@ -72,6 +74,7 @@ class BrewStewEnv(object):
 		self._update_unbrewed()
 
 		self.prefix, _ = cmd_output(['--prefix'])
+		self.cellar, _ = cmd_output(['--cellar'])
 		self.filtered_pkg_files = []
 		self.built_pkg_path = None
 
@@ -187,16 +190,53 @@ class BrewStewEnv(object):
 	def dump_pkg_files(self):
 		subprocess.call(['/usr/sbin/pkgutil', '--payload-files', self.built_pkg_path])
 
+	def build_report(self):
+		'''Write a report.json from this package run out to the current directory'''
+		report = {}
+		report['formulae'] = []
+		for formula in self.brew_list:
+			# Every item in self.brew_list may not have actually installed successfully,
+			# so first make sure we've got a matching entry from `brew info --installed`
+			try:
+				brew_info = [item for item in self.installed_json if item['name'] == formula][0]
+			except IndexError:
+				continue
+
+			f = {}
+			f['name'] = formula
+			# Direct output of `brew info --json=v1`
+			f['brew_info'] = brew_info
+
+			# Direct output of `santactl fileinfo --json` for all binaries in this
+			# formula's cellar
+			f['santa_info'] = []
+			# find any executables with this formula's Cellar location
+			for root, dirs, files in os.walk(os.path.join(self.cellar, formula)):
+				for phile in files:
+					full_path = os.path.join(root, phile)
+					if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+						santa_out, _ = cmd_output([
+							'/usr/local/bin/santactl',
+							'fileinfo',
+							'--json',
+							full_path], explicit_cmd=True)
+						santa_json = dict(json.loads(santa_out))
+						f['santa_info'].append(santa_json)
+			report['formulae'].append(f)
+
+		with open('report.json', 'w') as fd:
+			json.dump(report, fd, indent=2)
 
 def main():
 	env = BrewStewEnv(sys.argv[1])
 	env.cleanroom()
 	env.brew_update()
 	env.brew_install()
-	# env.brew_test()
+	env.brew_test()
 	# print env.non_homebrew_files
 	env.build_pkg(strategy='additive')
 	env.dump_pkg_files()
+	env.build_report()
 
 
 if __name__ == '__main__':
