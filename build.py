@@ -153,9 +153,13 @@ class BrewStewEnv(object):
 			file_list = cmd_output(['ls', '--verbose'] + [name for (name, ver) in self.installed_formulae])[0].splitlines()
 			stage_files(file_list, pkgroot)
 
-			# recursively walk the brew prefix to find links of interest, according to this criteria:
-			# - linked path contains 'Cellar' in the absolute pathname
-			# - item isn't excluded by the exclusion regex
+			# recursively walk the brew prefix to find links of interest, according to this criteria,
+			# in this order:
+			# - path of the symlink isn't excluded by exclude_re
+			# - the target of the symlink matches include_re - note that the
+			#   targets are often relative ('../Cellar/..') but not always; npm
+			#   is a symlink to '/usr/local/lib/node_modules/npm/bin/npm-cli.js' for example,
+			#   so adding other paths to include_re is a TODO
 			#
 			# TODO:
 			# - could there still be anything here that's stale, i.e. from a
@@ -164,6 +168,7 @@ class BrewStewEnv(object):
 			#   to contain a path like 'Cellar/<formula>' so that we can count
 			#   on it being relevant
 			exclude_re = r'^\/usr\/local\/(bin\/brew|Homebrew).*$'
+			include_re = r'^(\/usr\/local\/lib.*|.*Cellar).*$'
 			symlinks = []
 			print "Locating symlinks:"
 			for root, dirs, files in os.walk(INSTALL_LOCATION):
@@ -172,7 +177,7 @@ class BrewStewEnv(object):
 				for f in files:
 					full_spath = os.path.join(root, f)
 					if os.path.islink(full_spath):
-						if 'Cellar' not in os.path.realpath(full_spath):
+						if not re.match(include_re, os.path.realpath(full_spath)):
 							continue
 						linked_path = os.readlink(full_spath)
 						print "Got link '%s'  -->  '%s'" % (full_spath, os.readlink(full_spath))
