@@ -229,6 +229,11 @@ class BrewStewEnv(object):
 							'--json',
 							full_path]
 						santa_out, santa_err, retcode = cmd_output(santa_cmd, explicit_cmd=True)
+						# santactl doesn't output a non-zero exit code on an 'Invalid or empty file' error,
+						# so let's try scraping stderr
+						if santa_err:
+							log_err("santactl error on executing %s: '%s' - santa output for this binary will be skipped" % (santa_cmd, santa_err))
+							continue
 						santa_json = dict(json.loads(santa_out))
 						f['santa_info'].append(santa_json)
 			report['formulae'].append(f)
