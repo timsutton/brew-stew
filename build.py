@@ -28,7 +28,8 @@ def log_err(msg):
 
 def cmd_output(cmd, explicit_cmd=False, env={}):
 	'''Run a brew command passed as a list, returns (stdout, stderr)
-	env can optionally augment the environment passed to the process'''
+	env can optionally augment the environment passed to the process,
+	returns a 3-item tuple of (stdout, stderr, exitcode)'''
 	send_cmd = [BREW_BIN] + cmd
 	if explicit_cmd:
 		send_cmd = cmd
@@ -38,10 +39,11 @@ def cmd_output(cmd, explicit_cmd=False, env={}):
 	proc = subprocess.Popen(send_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
 							env=new_env)
 	out, err = proc.communicate()
-	return (out.strip(), err)
+	return (out.strip(), err, proc.returncode)
 
 def cmd_call(cmd, env={}):
-	'''Just subprocess.calls the list of args to the `brew` command'''
+	'''Just subprocess.calls the list of args to the `brew` command,
+	returns only the process's returncode'''
 	send_cmd = [BREW_BIN] + cmd
 	new_env = os.environ.copy()
 	new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
@@ -74,14 +76,14 @@ class BrewStewEnv(object):
 		self.non_homebrew_files = []
 		self._update_unbrewed()
 
-		self.prefix, _ = cmd_output(['--prefix'])
-		self.cellar, _ = cmd_output(['--cellar'])
+		self.prefix, _, _ = cmd_output(['--prefix'])
+		self.cellar, _, _ = cmd_output(['--cellar'])
 		self.filtered_pkg_files = []
 		self.built_pkg_path = None
 
 	def _update_installed(self):
 		installed = []
-		info_json, _ = cmd_output(['info', '--json=v1', '--installed'])
+		info_json, _, _ = cmd_output(['info', '--json=v1', '--installed'])
 		self.installed_json = json.loads(info_json)
 		for f in self.installed_json:
 			installed.append((f['name'], f['installed'][0]['version']))
@@ -221,11 +223,12 @@ class BrewStewEnv(object):
 				for phile in files:
 					full_path = os.path.join(root, phile)
 					if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
-						santa_out, _ = cmd_output([
+						santa_cmd = [
 							'/usr/local/bin/santactl',
 							'fileinfo',
 							'--json',
-							full_path], explicit_cmd=True)
+							full_path]
+						santa_out, santa_err, retcode = cmd_output(santa_cmd, explicit_cmd=True)
 						santa_json = dict(json.loads(santa_out))
 						f['santa_info'].append(santa_json)
 			report['formulae'].append(f)
