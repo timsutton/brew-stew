@@ -203,6 +203,7 @@ class BrewStewEnv(object):
         report = {}
         report['formulae'] = []
         for formula in self.brew_list:
+            print "Gathering report for formula '%s'" % formula
             # Every item in self.brew_list may not have actually installed successfully,
             # so first make sure we've got a matching entry from `brew info --installed`
             try:
