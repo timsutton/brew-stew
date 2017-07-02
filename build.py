@@ -144,14 +144,10 @@ class BrewStewEnv(object):
 
 
         if strategy == 'additive':
-            pkgroot = os.path.expanduser('~/Desktop/pkgroot')
+            pkgroot = tempfile.mkdtemp()
+            # TODO: derive this from a variable/const
             pkgbuild_cmd += ['--root', os.path.join(pkgroot, 'usr/local')]
 
-            if os.path.exists(pkgroot):
-                shutil.rmtree(pkgroot)
-            # TODO: derive this from a variable/const
-            # os.makedirs(os.path.join(pkgroot, 'usr/local'))
-            os.mkdir(pkgroot)
             file_list = cmd_output(['ls', '--verbose'] + [name for (name, ver) in self.installed_formulae])[0].splitlines()
             stage_files(file_list, pkgroot)
 
@@ -194,6 +190,9 @@ class BrewStewEnv(object):
         print "Calling pkgbuild command: %s" % pkgbuild_cmd
         pkgbuild_cmd.append(self.built_pkg_path)
         subprocess.call(pkgbuild_cmd)
+
+        print "Cleaning up temp root dir at %s" % pkgroot
+        shutil.rmtree(pkgroot)
 
     def dump_pkg_files(self):
         subprocess.call(['/usr/sbin/pkgutil', '--payload-files', self.built_pkg_path])
