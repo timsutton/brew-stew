@@ -200,6 +200,11 @@ class BrewStewEnv(object):
     def build_report(self):
         '''Write a report.json from this package run out to the current directory'''
         report = {}
+        # summary will contain a simple dictionary of formulae with versions for ease
+        # of parsing
+        report['summary'] = {}
+        report['summary']['formulae'] = []
+
         report['formulae'] = []
         for formula in self.brew_list:
             print "Gathering report for formula '%s'" % formula
@@ -214,6 +219,15 @@ class BrewStewEnv(object):
             f['name'] = formula
             # Direct output of `brew info --json=v1`
             f['brew_info'] = brew_info
+            # I don't know when 'installed' _wouldn't_ be present, but let's be
+            # cautious anyway
+            if f['brew_info'].get('installed'):
+                report['summary']['formulae'].append(
+                    {'name': f['name'],
+                     'version': f['brew_info']['installed'][0]['version'],
+                    })
+            else:
+                log_err("WARNING: unexpected missing 'installed' dictionary in brew info for this formula")
 
             # Direct output of `santactl fileinfo --json` for all binaries in this
             # formula's cellar
