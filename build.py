@@ -54,11 +54,14 @@ def cmd_call(cmd, env={}):
     retcode = subprocess.call(send_cmd, env=new_env)
     return retcode
 
-def list_files(root):
-    '''Returns a list of files (dir paths are excluded) at a given root. Useful
+def list_files(root, include_dirs=True):
+    '''Returns a list of files (and optionall dirs) at a given root. Useful
     for feeding to stage_files().'''
     file_list = []
     for root, dirs, files in os.walk(root):
+        if include_dirs:
+            for d in dirs:
+                file_list.append(os.path.join(root, d))
         for f in files:
             file_list.append(os.path.join(root, f))
     return file_list
