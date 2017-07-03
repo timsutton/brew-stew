@@ -131,9 +131,6 @@ class BrewStewEnv(object):
         if version is None:
             version = strftime('%Y.%m.%d', gmtime())
         self.built_pkg_path = os.path.join(os.getcwd(), 'stew_%s-%s.pkg' % (strategy, version))
-        # TODO: see if we can still use '--install-location /usr/local' so we can avoid needing to include it
-        # in the actual payload path. This is easy to do when we're packaging a '--root' in-place, but more
-        # work if we
         pkgbuild_cmd = ['/usr/bin/pkgbuild', '--install-location', INSTALL_LOCATION, '--identifier', 'com.brewstew', '--version', version]
 
         if strategy == 'subtractive':
