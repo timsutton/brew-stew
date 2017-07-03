@@ -54,6 +54,15 @@ def cmd_call(cmd, env={}):
     retcode = subprocess.call(send_cmd, env=new_env)
     return retcode
 
+def list_files(root):
+    '''Returns a list of files (dir paths are excluded) at a given root. Useful
+    for feeding to stage_files().'''
+    file_list = []
+    for root, dirs, files in os.walk(root):
+        for f in files:
+            file_list.append(os.path.join(root, f))
+    return file_list
+
 def stage_files(source_file_list, pkgroot, opts=['-a']):
     file_list_path = tempfile.mkstemp()[1]
     with open(file_list_path, 'w') as fd:
@@ -190,13 +199,11 @@ class BrewStewEnv(object):
             print "Staging symlinks"
             stage_files(symlinks, pkgroot)
 
-            print "Staging opt"
-            opt_files = [os.path.join('/usr/local/opt', f) for f in os.listdir('/usr/local/opt')]
-            stage_files(opt_files, pkgroot)
-
-            print "Staging var"
-            var_files = [os.path.join('/usr/local/var', f) for f in os.listdir('/usr/local/var')]
-            stage_files(var_files, pkgroot)
+            additional_stage_dirs = ['opt', 'var']
+            for add_dir in additional_stage_dirs:
+                print "Staging additional dir: '%s'" % add_dir
+                files_to_add = list_files(os.path.join('/usr/local', add_dir))
+                stage_files(files_to_add, pkgroot)
 
         print "Calling pkgbuild command: %s" % pkgbuild_cmd
         pkgbuild_cmd.append(self.built_pkg_path)
