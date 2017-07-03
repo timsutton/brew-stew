@@ -100,13 +100,13 @@ class BrewStewEnv(object):
         out, _ = proc.communicate()
         for line in out.splitlines():
             self.non_homebrew_files.append(line)
-    
-    def brew_oudated(self):
+
+    def brew_outdated(self):
 		cmd_call(['outdated', '--json=v1']) # print for debugging
-    
+
     def brew_update(self):
         cmd_call(['update'])
-        
+
     def brew_upgrade(self):
 		cmd_call(['upgrade'])
 
@@ -196,7 +196,7 @@ class BrewStewEnv(object):
             print "Staging opt"
             opt_files = [os.path.join('/usr/local/opt', f) for f in os.listdir('/usr/local/opt')]
             stage_files(opt_files, pkgroot)
-            
+
             print "Staging var"
 	    var_files = [os.path.join('/usr/local/var', f) for f in os.listdir('/usr/local/var')]
             stage_files(var_files, pkgroot)
