@@ -198,8 +198,8 @@ class BrewStewEnv(object):
             stage_files(opt_files, pkgroot)
             
             print "Staging var"
-			var_files = [os.path.join('/usr/local/var', f) for f in os.listdir('/usr/local/var')]
-			stage_files(var_files, pkgroot)
+	    var_files = [os.path.join('/usr/local/var', f) for f in os.listdir('/usr/local/var')]
+            stage_files(var_files, pkgroot)
 
         print "Calling pkgbuild command: %s" % pkgbuild_cmd
         pkgbuild_cmd.append(self.built_pkg_path)
