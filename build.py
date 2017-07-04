@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import logging
 import json
 import os
 import re
@@ -28,6 +29,7 @@ PKG_FILTERS = [
 'zentral',
 ]
 
+log = logging.getLogger('brew-stew')
 def log_err(msg):
     print >> sys.stderr, msg
 
@@ -41,6 +43,7 @@ def cmd_output(cmd, explicit_cmd=False, env={}):
     new_env = os.environ.copy()
     new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
     new_env.update(env)
+    log.debug("Executing command: %s" % ' '.join(send_cmd))
     proc = subprocess.Popen(send_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             env=new_env)
     out, err = proc.communicate()
@@ -52,6 +55,7 @@ def cmd_call(cmd, env={}):
     send_cmd = [BREW_BIN] + cmd
     new_env = os.environ.copy()
     new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
+    log.debug("Executing command: %s" % ' '.join(send_cmd))
     retcode = subprocess.call(send_cmd, env=new_env)
     return retcode
 
@@ -295,6 +299,8 @@ def main():
     if not os.path.exists(args.brew_list_file):
         sys.exit("brew list file %s is invalid or can't be found." % args.brew_list_file)
 
+    log.setLevel(logging.WARNING - (10 * args.verbose))
+    log.addHandler(logging.StreamHandler(stream=sys.stdout))
     env = BrewStewEnv(args.brew_list_file)
     # print env.non_homebrew_files
     env.build_pkg(strategy='additive')
