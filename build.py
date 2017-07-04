@@ -119,13 +119,13 @@ class BrewStewEnv(object):
             self.non_homebrew_files.append(line)
 
     def brew_outdated(self):
-		cmd_call(['outdated', '--json=v1']) # print for debugging
+        cmd_call(['outdated', '--json=v1']) # print for debugging
 
     def brew_update(self):
         cmd_call(['update'])
 
     def brew_upgrade(self):
-		cmd_call(['upgrade'])
+        cmd_call(['upgrade'])
 
     def brew_install(self):
         for brew in self.brew_list:
