@@ -88,7 +88,7 @@ def stage_files(source_file_list, pkgroot, opts=['-a']):
     subprocess.call(rsync_cmd)
 
 class BrewStewEnv(object):
-    def __init__(self, brew_file):
+    def __init__(self, brew_file, output_dir):
         cmd_call(['analytics', 'off'])
 
         self.brew_list = []
@@ -96,6 +96,7 @@ class BrewStewEnv(object):
             if line.startswith("#"):
                 continue
             self.brew_list.append(line)
+        self.output_dir = output_dir
 
         self.installed_json = []
         self.installed_formulae = []
@@ -289,24 +290,32 @@ class BrewStewEnv(object):
             json.dump(report, fd, indent=2)
 
 def main():
-    desc = """Builds monolithic macOS installer packages from a list of Homebrew
-formulae."""
+    desc = """Builds monolithic macOS installer packages from a Homebrew formula
+install configuration. Given a list of formulae in a text file and an
+output directory, it outputs a .pkg and several report files."""
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('brew_list_file', type=str,
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument(
+        'brew_list_file', type=str,
         help="Path to a file containing a list of formulae")
-    parser.add_argument('--verbose', '-v', action='count', default=0,
+    parser.add_argument(
+        'output_dir', type=str,
+        help="Path to the output directory for all build files (NOT YET IMPLEMENTED)")
+    parser.add_argument(
+        '--verbose', '-v', action='count', default=0,
         help=("Increase output verbosity, can be specified twice for debug "
               "level output"))
     args = parser.parse_args()
 
     if not os.path.exists(args.brew_list_file):
         sys.exit("brew list file %s is invalid or can't be found." % args.brew_list_file)
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
     log.setLevel(logging.WARNING - (10 * args.verbose))
     log.addHandler(logging.StreamHandler(stream=sys.stdout))
 
-    env = BrewStewEnv(args.brew_list_file)
+    env = BrewStewEnv(args.brew_list_file, args.output_dir)
     env.cleanroom()
     env.brew_update()
     env.brew_install()
