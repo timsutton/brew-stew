@@ -298,7 +298,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('brew_list_file', type=str,
         help="Path to a file containing a list of formulae")
-    parser.add_argument('--verbose', '-v', action='count',
+    parser.add_argument('--verbose', '-v', action='count', default=0,
         help=("Increase output verbosity, can be specified twice for debug "
               "level output"))
     args = parser.parse_args()
