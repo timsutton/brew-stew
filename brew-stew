@@ -151,7 +151,7 @@ class BrewStewEnv(object):
             cmd_call(rm_cmd)
         cmd_call(['cleanup'])
 
-    def build_pkg(self, version=None, output_path=None, strategy='subtractive'):
+    def build_pkg(self, version=None, output_path=None, strategy='additive'):
         if version is None:
             version = strftime('%Y.%m.%d', gmtime())
         self.built_pkg_path = os.path.join(os.getcwd(), 'stew_%s-%s.pkg' % (strategy, version))
@@ -312,7 +312,7 @@ formulae."""
     env.brew_install()
     env.brew_test()
     # print env.non_homebrew_files
-    env.build_pkg(strategy='additive')
+    env.build_pkg()
     env.dump_pkg_files()
     env.build_report()
 
