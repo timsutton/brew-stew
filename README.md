@@ -1,4 +1,5 @@
 # brew-stew
+
 Monolithic homebrew packages for dev environment deployment
 
 ## Usage
@@ -22,3 +23,5 @@ Using tools like `brew ls --verbose <formula>` to list all the files known to be
 ## Reporting
 
 For now, the `BrewStewEnv.build_report()` method saves a file, `report.json`, in the current directory. Eventually this can be made more configurable or be bundled in a directory along with a built package.
+
+See [this wiki page](https://github.com/timsutton/brew-stew/wiki/Report-JSON) for sample JSON report output for a build of just the `cowsay` formula.
