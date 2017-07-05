@@ -34,29 +34,35 @@ log = logging.getLogger('brew-stew')
 def log_err(msg):
     print >> sys.stderr, msg
 
-def cmd_output(cmd, explicit_cmd=False, env={}):
+def cmd_output(cmd, explicit_cmd=False, env=None):
     '''Run a brew command passed as a list, returns (stdout, stderr)
     env can optionally augment the environment passed to the process,
-    returns a 3-item tuple of (stdout, stderr, exitcode)'''
+    returns a 3-item tuple of (stdout, stderr, exitcode). env can
+    augmenet the default environment.'''
     send_cmd = [BREW_BIN] + cmd
     if explicit_cmd:
         send_cmd = cmd
     new_env = os.environ.copy()
     new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
-    new_env.update(env)
+    if env:
+        new_env.update(env)
     log.debug("Executing command: %s" % ' '.join(send_cmd))
     proc = subprocess.Popen(send_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             env=new_env)
     out, err = proc.communicate()
     return (out.strip(), err, proc.returncode)
 
-def cmd_call(cmd, env={}):
+def cmd_call(cmd, env=None):
     '''Just subprocess.calls the list of args to the `brew` command,
-    returns only the process's returncode'''
+    returns only the process's returncode. env can augmenet the default
+    environment.'''
     send_cmd = [BREW_BIN] + cmd
     new_env = os.environ.copy()
     new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
     log.debug("Executing command: %s" % ' '.join(send_cmd))
+    if env:
+        new_env.update(env)
+
     retcode = subprocess.call(send_cmd, env=new_env)
     return retcode
 
