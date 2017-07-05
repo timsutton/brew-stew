@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# pylint: disable=locally-disabled, line-too-long
 
 import argparse
 import logging
