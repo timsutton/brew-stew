@@ -3,7 +3,7 @@ Monolithic homebrew packages for dev environment deployment
 
 ## Usage
 
-`build.py <path_to_list_file>`
+`brew-stew <path_to_list_file>`
 
 Use `-h` to see full help. Use `-v` options to increase verbosity.
 
