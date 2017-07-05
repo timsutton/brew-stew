@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# pylint: disable=locally-disabled, line-too-long
+# pylint: disable=locally-disabled, line-too-long, invalid-name
 
 import argparse
 import logging
@@ -19,15 +19,15 @@ INSTALL_LOCATION = '/usr/local'
 
 # Some additional items which are erroneously not listed in `brew ls --unbrewed`
 PKG_FILTERS = [
-'bin/santactl',
-'bin/osqueryctl',
-'bin/osqueryd',
-'bin/osqueryi',
-'bin/autopkg',
-'remotedesktop/RemoteDesktopChangeClientSettings.pkg',
-'var', # exclude all of var to see what breaks
-'Library',
-'zentral',
+    'bin/santactl',
+    'bin/osqueryctl',
+    'bin/osqueryd',
+    'bin/osqueryi',
+    'bin/autopkg',
+    'remotedesktop/RemoteDesktopChangeClientSettings.pkg',
+    'var', # exclude all of var to see what breaks
+    'Library',
+    'zentral',
 ]
 
 log = logging.getLogger('brew-stew')
@@ -46,7 +46,7 @@ def cmd_output(cmd, explicit_cmd=False, env=None):
     new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
     if env:
         new_env.update(env)
-    log.debug("Executing command: %s" % ' '.join(send_cmd))
+    log.debug("Executing command: %s", ' '.join(send_cmd))
     proc = subprocess.Popen(send_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             env=new_env)
     out, err = proc.communicate()
@@ -209,7 +209,7 @@ class BrewStewEnv(object):
                         if not re.match(include_re, os.path.realpath(full_spath)):
                             continue
                         linked_path = os.readlink(full_spath)
-                        print "Got link '%s'  -->  '%s'" % (full_spath, os.readlink(full_spath))
+                        print "Got link '%s'  -->  '%s'" % (full_spath, linked_path)
                         symlinks.append(full_spath)
             print "Staging symlinks"
             stage_files(symlinks, pkgroot)
@@ -266,7 +266,7 @@ class BrewStewEnv(object):
             # formula's cellar
             f['santa_info'] = []
             # find any executables with this formula's Cellar location
-            for root, dirs, files in os.walk(os.path.join(self.cellar, formula)):
+            for root, _, files in os.walk(os.path.join(self.cellar, formula)):
                 for phile in files:
                     full_path = os.path.join(root, phile)
                     if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
@@ -275,7 +275,7 @@ class BrewStewEnv(object):
                             'fileinfo',
                             '--json',
                             full_path]
-                        santa_out, santa_err, retcode = cmd_output(santa_cmd, explicit_cmd=True)
+                        santa_out, santa_err, _ = cmd_output(santa_cmd, explicit_cmd=True)
                         # santactl doesn't output a non-zero exit code on an 'Invalid or empty file' error,
                         # so let's try scraping stderr
                         if santa_err:
