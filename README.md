@@ -4,9 +4,9 @@ Monolithic homebrew packages for dev environment deployment
 
 ## Usage
 
-`brew-stew <path_to_list_file>`
+`brew-stew [-v] <path_to_list_file> <path_to_output_dir>`
 
-Use `-h` to see full help. Use `-v` options to increase verbosity.
+Use `-h` to see full help. Use `-v` to print `DEBUG` level output to stdout. `INFO` level is currently output by default.
 
 ## Approaches
 
@@ -22,6 +22,34 @@ Using tools like `brew ls --verbose <formula>` to list all the files known to be
 
 ## Reporting
 
-For now, the `BrewStewEnv.build_report()` method saves a file, `report.json`, in the current directory. Eventually this can be made more configurable or be bundled in a directory along with a built package.
+Currently several report files are saved in the output directory alongside the installer package:
+
+### report.json
+
+`report.json` currently contains the following:
+
+- exhaustive output from `brew info --json=v1`
+- output of `santactl fileinfo` from every executable detected in the Cellar
+- a summary, currently containing only formula names and versions
 
 See [this wiki page](https://github.com/timsutton/brew-stew/wiki/Report-JSON) for sample JSON report output for a build of just the `cowsay` formula.
+
+### build_debug.log
+
+Full debug output of the command, regardless of verbose level specified in the tool. Note that currently there is still a lot of output from `brew` itself which is not yet being redirected through the logger, so this currently information we're logging explicitly and nothing directly output `brew` commands.
+
+### package_bom.txt
+
+This is the output of `lsbom` on the `Bom` file from the package, which is a complete list of all files with ownerships and modes in the package.
+
+### formula_versions.txt
+
+This is a simple textfile with a list of formulae and versions for easy readability and diff'ing. For example:
+
+```
+dnsmasq 2.77_1
+docker 17.05.0
+jpeg 8d
+libtiff 4.0.8
+xz 5.2.3
+```
