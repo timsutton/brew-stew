@@ -155,7 +155,7 @@ class BrewStewEnv(object):
         if version is None:
             version = strftime('%Y.%m.%d', gmtime())
         self.built_pkg_path = os.path.join(os.getcwd(), 'stew_%s-%s.pkg' % (strategy, version))
-        pkgbuild_cmd = ['/usr/bin/pkgbuild', '--install-location', INSTALL_LOCATION, '--identifier', 'com.brewstew', '--version', version]
+        pkgbuild_cmd = ['/usr/bin/pkgbuild', '--install-location', INSTALL_LOCATION, '--identifier', 'org.brew-stew.pkg', '--version', version]
 
         if strategy == 'subtractive':
             pkgbuild_cmd += ['--root', self.prefix]
