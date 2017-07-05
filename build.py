@@ -59,10 +59,10 @@ def cmd_call(cmd, env=None):
     send_cmd = [BREW_BIN] + cmd
     new_env = os.environ.copy()
     new_env['HOMEBREW_NO_AUTO_UPDATE'] = '1'
-    log.debug("Executing command: %s" % ' '.join(send_cmd))
     if env:
         new_env.update(env)
 
+    log.debug("Executing command: %s", ' '.join(send_cmd))
     retcode = subprocess.call(send_cmd, env=new_env)
     return retcode
 
