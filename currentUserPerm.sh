@@ -17,14 +17,13 @@ groupScope="_developer"
 
 /bin/chmod u+rwx /usr/local/bin
 /bin/chmod g+rwx /usr/local/bin
-# process  symlinks only, ensure to exclude symlinks for jamf, autopkg, outset, santactl
-find /usr/local/bin/ -type l -and ! -name "jamf" -and ! -name "autopkg" -and ! -name "outset" ! -name "santactl"  -exec chown -R $loggedI$
-find /usr/local/bin/ -type l -and ! -name "jamf" -and ! -name "autopkg" -and ! -name "outset" ! -name "santactl"  -exec chgrp -R $groupSc$
-/bin/mkdir -p /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local/lib /usr/local/opt$
-/bin/chmod g+rwx /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local/lib /usr/local/$
+find /usr/local/bin/ -type l -and ! -name "jamf" -and ! -name "autopkg" -and ! -name "outset" ! -name "santactl"  -exec chown -R $loggedInUser {} \;
+find /usr/local/bin/ -type l -and ! -name "jamf" -and ! -name "autopkg" -and ! -name "outset" ! -name "santactl"  -exec chgrp -R $groupScope {} \;
+/bin/mkdir -p /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local/lib /usr/local/opt /usr/local/sbin /usr/local/share /usr/local/share/zsh /usr/local/share/zsh/site-functions /usr/local/var
+/bin/chmod g+rwx /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local/lib /usr/local/opt /usr/local/sbin /usr/local/share /usr/local/share/zsh /usr/local/share/zsh/site-functions /usr/local/var
 /bin/chmod 755 /usr/local/share/zsh /usr/local/share/zsh/site-functions
-/usr/sbin/chown -R $loggedInUser /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local$
-/usr/bin/chgrp -R $groupScope /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local/li$
+/usr/sbin/chown -R $loggedInUser /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local/lib /usr/local/opt /usr/local/sbin /usr/local/share /usr/local/share/zsh /usr/local/share/zsh/site-functions /usr/local/var
+/usr/bin/chgrp -R $groupScope /usr/local/Cellar /usr/local/Homebrew /usr/local/Frameworks /usr/local/etc /usr/local/include /usr/local/lib /usr/local/opt /usr/local/sbin /usr/local/share /usr/local/share/zsh /usr/local/share/zsh/site-functions /usr/local/var
 /bin/mkdir -p /Users/$loggedInUser/Library/Caches/Homebrew
 /bin/chmod g+rwx /Users/$loggedInUser/Library/Caches/Homebrew
 /usr/sbin/chown -R $loggedInUser /Users/$loggedInUser/Library/Caches/Homebrew
