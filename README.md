@@ -5,6 +5,8 @@ Monolithic homebrew packages for dev environment deployment
 
 `build.py <path_to_list_file>`
 
+Use `-h` to see full help. Use `-v` options to increase verbosity.
+
 ## Approaches
 
 A couple possible approaches being played with in terms of the logic for determining what goes in the package, which are for now just termed as 'subtractive' and 'additive'. Currently the build script defaults to `additive`.
