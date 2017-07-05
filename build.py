@@ -290,11 +290,8 @@ class BrewStewEnv(object):
 
 def main():
     desc = """Builds monolithic macOS installer packages from a list of Homebrew
-    env.cleanroom()
-    env.brew_update()
-    env.brew_install()
-    env.brew_test()
-    formulae"""
+formulae."""
+
     parser = argparse.ArgumentParser()
     parser.add_argument('brew_list_file', type=str,
         help="Path to a file containing a list of formulae")
@@ -308,7 +305,12 @@ def main():
 
     log.setLevel(logging.WARNING - (10 * args.verbose))
     log.addHandler(logging.StreamHandler(stream=sys.stdout))
+
     env = BrewStewEnv(args.brew_list_file)
+    env.cleanroom()
+    env.brew_update()
+    env.brew_install()
+    env.brew_test()
     # print env.non_homebrew_files
     env.build_pkg(strategy='additive')
     env.dump_pkg_files()
