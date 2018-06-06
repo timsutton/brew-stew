@@ -1,6 +1,8 @@
 # brew-stew
 
-Monolithic homebrew packages for dev environment deployment
+Monolithic homebrew packages for dev/build environment deployment. The goal of this project is to be able to build a single self-contained homebrew installation in the format of a macOS installer package.
+
+The package contains the entire homebrew installation at its default location of `/usr/local`, so it is designed to be built on an isolated system and the package deployed to build/dev machines _instead of_ using `brew` directly on the target system(s). It should, however, play nice with any other binaries/applications which may be installed to `/usr/local` on the target.
 
 ## Usage
 
