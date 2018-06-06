@@ -320,7 +320,7 @@ output directory, it outputs a .pkg and several report files."""
         help="Path to a file containing a list of formulae")
     parser.add_argument(
         'output_dir', type=str,
-        help="Path to the output directory for all build files (NOT YET IMPLEMENTED)")
+        help="Path to the output directory for all build files")
     parser.add_argument(
         '--verbose', '-v', action='count', default=0,
         help=("Increase output verbosity, currently can be specified only once"))
