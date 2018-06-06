@@ -10,6 +10,8 @@ The package contains the entire homebrew installation at its default location of
 
 Use `-h` to see full help. Use `-v` to print `DEBUG` level output to stdout. `INFO` level is currently output by default.
 
+The "list_file" is simply a text file with a list of formulae. A few samples are included in the `sample_listfiles` directory.
+
 ## Approaches
 
 A couple possible approaches being played with in terms of the logic for determining what goes in the package, which are for now just termed as 'subtractive' and 'additive'. Currently the build script defaults to `additive`.
