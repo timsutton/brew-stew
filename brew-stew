@@ -285,8 +285,8 @@ class BrewStewEnv(object):
                             log.warning("santactl error on executing %s: '%s' - santa output for this binary will be skipped",
                                         santa_cmd, santa_err)
                             continue
-                        santa_json = dict(json.loads(santa_out))
-                        f['santa_info'].append(santa_json)
+                        santa_json = json.loads(santa_out)
+                        f['santa_info'].append(santa_json[0])
             report['formulae'].append(f)
 
         with open(os.path.join(self.output_dir, 'report.json'), 'w') as fd:
