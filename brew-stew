@@ -15,6 +15,7 @@ from pprint import pprint
 from time import gmtime, strftime
 
 BREW_BIN = '/usr/local/bin/brew'
+SANTA_BIN = '/Library/Extensions/santa-driver.kext/Contents/MacOS/santactl'
 INSTALL_LOCATION = '/usr/local'
 
 # Some additional items which are erroneously not listed in `brew ls --unbrewed`
@@ -273,7 +274,7 @@ class BrewStewEnv(object):
                     full_path = os.path.join(root, phile)
                     if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
                         santa_cmd = [
-                            '/usr/local/bin/santactl',
+                            SANTA_BIN,
                             'fileinfo',
                             '--json',
                             full_path]
@@ -330,6 +331,11 @@ output directory, it outputs a .pkg and several report files."""
         sys.exit("brew list file %s is invalid or can't be found." % args.brew_list_file)
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
+    if not os.path.exists(SANTA_BIN):
+        sys.exit("brew-stew requires an installation of Google Santa on this "
+                 "build machine for the purposes of generating reports. Please "
+                 "install the latest Santa release package from "
+                 "https://github.com/google/santa/releases and re-run.")
 
     # global logger needs the lowest debug log enabled, but then we may raise the stdout (StreamHandler)
     # handler back up according to user options. build_debug.log always uses DEBUG level.
